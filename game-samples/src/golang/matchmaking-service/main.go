@@ -2,18 +2,42 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	spanner "cloud.google.com/go/spanner"
+	c "github.com/dtest/spanner-game-match-service/config"
 	"github.com/dtest/spanner-game-match-service/models"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
+var configuration c.Configurations
+
+func init() {
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.SetConfigType("yml")
+
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Error reading config file, %s", err)
+	}
+
+	viper.SetDefault("server.host", "localhost")
+	viper.SetDefault("server.port", 8080)
+
+	err := viper.Unmarshal(&configuration)
+	if err != nil {
+		fmt.Printf("Unable to decode into struct, %v", err)
+	}
+
+}
+
 // Mutator to create spanner context and client, and set them in gin
-func setSpannerConnection(connectionString string) gin.HandlerFunc {
+func setSpannerConnection() gin.HandlerFunc {
 	ctx := context.Background()
-	client, err := spanner.NewClient(ctx, connectionString)
+	client, err := spanner.NewClient(ctx, configuration.Spanner.URL())
 
 	if err != nil {
 		log.Fatal(err)
@@ -27,23 +51,23 @@ func setSpannerConnection(connectionString string) gin.HandlerFunc {
 }
 
 // Helper function to retrieve spanner client and context
-func getSpannerConnection(c *gin.Context) (spanner.Client, context.Context) {
-	return c.MustGet("spanner_client").(spanner.Client),
-		c.MustGet("spanner_context").(context.Context)
+func getSpannerConnection(c *gin.Context) (context.Context, spanner.Client) {
+	return c.MustGet("spanner_context").(context.Context),
+		c.MustGet("spanner_client").(spanner.Client)
 }
 
 // Creating a game assigns a list of players not currently playing a game
 func createGame(c *gin.Context) {
 	var game models.Game
 
-	client, ctx := getSpannerConnection(c)
-	gameID, err := models.CreateGame(game, ctx, client)
+	ctx, client := getSpannerConnection(c)
+	err := game.CreateGame(ctx, client)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	c.IndentedJSON(http.StatusCreated, gameID)
+	c.IndentedJSON(http.StatusCreated, game.GameUUID)
 }
 
 func closeGame(c *gin.Context) {
@@ -54,14 +78,14 @@ func closeGame(c *gin.Context) {
 		return
 	}
 
-	client, ctx := getSpannerConnection(c)
-	playerUUID, err := models.CloseGame(game, ctx, client)
+	ctx, client := getSpannerConnection(c)
+	err := game.CloseGame(ctx, client)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, playerUUID)
+	c.IndentedJSON(http.StatusOK, game.Winner)
 }
 
 func main() {
@@ -69,12 +93,11 @@ func main() {
 	// TODO: Better configuration of trusted proxy
 	router.SetTrustedProxies(nil)
 
-	var db = "projects/development-344820/instances/cymbal-games/databases/my_game"
-	router.Use(setSpannerConnection(db))
+	router.Use(setSpannerConnection())
 
 	router.POST("/games/create", createGame)
 	router.PUT("/games/close", closeGame)
 
 	// TODO: Better configuration of host
-	router.Run("localhost:8081")
+	router.Run(configuration.Server.URL())
 }

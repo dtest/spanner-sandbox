@@ -19,13 +19,13 @@ class PlayerLoad(HttpUser):
         pUUIDs = json.loads(r.text)
 
     def generatePlayerName(self):
-        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=15))
+        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=32))
 
     def generatePassword(self):
-        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=15))
+        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=32))
 
     def generateEmail(self):
-        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=10) + ['@'] +
+        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=32) + ['@'] +
             random.choices(['gmail', 'yahoo', 'microsoft']) + ['.com'])
 
     @task

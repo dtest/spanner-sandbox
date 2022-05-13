@@ -13,7 +13,7 @@ func TestValidEmails(t *testing.T) {
 		if res == false {
 			t.Error(
 				"For", email,
-				"expected", false,
+				"expected", true,
 				"got", res,
 			)
 		}
@@ -31,7 +31,7 @@ func TestInvalidEmails(t *testing.T) {
 		if res == true {
 			t.Error(
 				"For", email,
-				"expected", true,
+				"expected", false,
 				"got", res,
 			)
 		}

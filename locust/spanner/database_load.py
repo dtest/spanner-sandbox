@@ -118,6 +118,7 @@ class PlayerTasks(SpannerUser):
                 "email": self._generateEmail(),
                 "password": self._generatePassword()
                 }
+        # TODO: use parameters instead of formatting input.
         stmt ="""INSERT players (playerUUID, player_name, email, user_password, created, active_skinUUID) VALUES
 					('{playerUUID}', '{playerName}', '{email}', '{password}', CURRENT_TIMESTAMP(), '1')"""
         self.client.get_add_player("insert",

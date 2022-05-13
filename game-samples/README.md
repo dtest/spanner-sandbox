@@ -40,11 +40,29 @@ export SPANNER_DATABASE_ID=DATABASEID
 ```
 
 ### Player profile sample
+- Configure the `profile-service` by copying the `profile-service/config.yml.template` file to `profile-service/config.yml`, and modify the Spanner connection details:
+```
+spanner:
+  project_id: YOUR_GCP_PROJECT_ID
+  instance_id: YOUR_SPANNER_INSTANCE_ID
+  database_id: YOUR_SPANNER_DATABASE_ID
+
+```
+
 - Run the profile service
 
 ```
 cd src/golang/profile-service
 go run .
+```
+
+- Configure the `matchmaking-service` by copying the `matchmaking-service/config.yml.template` file to `matchmaking-service/config.yml`, and modify the Spanner connection details:
+```
+spanner:
+  project_id: YOUR_GCP_PROJECT_ID
+  instance_id: YOUR_SPANNER_INSTANCE_ID
+  database_id: YOUR_SPANNER_DATABASE_ID
+
 ```
 
 - Run the match-making service

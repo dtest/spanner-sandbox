@@ -2,18 +2,43 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	spanner "cloud.google.com/go/spanner"
+	c "github.com/dtest/spanner-game-profile-service/config"
 	"github.com/dtest/spanner-game-profile-service/models"
+
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
+var configuration c.Configurations
+
+func init() {
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.SetConfigType("yml")
+
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Error reading config file, %s", err)
+	}
+
+	viper.SetDefault("server.host", "localhost")
+	viper.SetDefault("server.port", 8080)
+
+	err := viper.Unmarshal(&configuration)
+	if err != nil {
+		fmt.Printf("Unable to decode into struct, %v", err)
+	}
+
+}
+
 // Mutator to create spanner context and client, and set them in gin
-func setSpannerConnection(connectionString string) gin.HandlerFunc {
+func setSpannerConnection() gin.HandlerFunc {
 	ctx := context.Background()
-	client, err := spanner.NewClient(ctx, connectionString)
+	client, err := spanner.NewClient(ctx, configuration.Spanner.URL())
 
 	if err != nil {
 		log.Fatal(err)
@@ -27,15 +52,16 @@ func setSpannerConnection(connectionString string) gin.HandlerFunc {
 }
 
 // Helper function to retrieve spanner client and context
-func getSpannerConnection(c *gin.Context) (spanner.Client, context.Context) {
-	return c.MustGet("spanner_client").(spanner.Client),
-		c.MustGet("spanner_context").(context.Context)
+func getSpannerConnection(c *gin.Context) (context.Context, spanner.Client) {
+	return c.MustGet("spanner_context").(context.Context),
+		c.MustGet("spanner_client").(spanner.Client)
+
 }
 
 // TODO: used by authentication server to generate load. Should not be called by other entities,
 //  so restrictions should be implemented
 func getPlayerUUIDs(c *gin.Context) {
-	client, ctx := getSpannerConnection(c)
+	ctx, client := getSpannerConnection(c)
 
 	players, err := models.GetPlayerUUIDs(ctx, client)
 	if err != nil {
@@ -49,9 +75,9 @@ func getPlayerUUIDs(c *gin.Context) {
 func getPlayerByID(c *gin.Context) {
 	var playerUUID = c.Param("id")
 
-	client, ctx := getSpannerConnection(c)
+	ctx, client := getSpannerConnection(c)
 
-	player, err := models.GetPlayerByUUID(playerUUID, ctx, client)
+	player, err := models.GetPlayerByUUID(ctx, client, playerUUID)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "player not found"})
 		return
@@ -61,11 +87,12 @@ func getPlayerByID(c *gin.Context) {
 }
 
 func getPlayerStats(c *gin.Context) {
-	var playerUUID = c.Param("id")
+	var player models.Player
+	player.PlayerUUID = c.Param("id")
 
-	client, ctx := getSpannerConnection(c)
+	ctx, client := getSpannerConnection(c)
 
-	player, err := models.GetPlayerStats(playerUUID, ctx, client)
+	err := player.GetPlayerStats(ctx, client)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "player not found"})
@@ -83,14 +110,14 @@ func createPlayer(c *gin.Context) {
 		return
 	}
 
-	client, ctx := getSpannerConnection(c)
-	playerUUID, err := models.AddPlayer(player, ctx, client)
+	ctx, client := getSpannerConnection(c)
+	err := player.AddPlayer(ctx, client)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	c.IndentedJSON(http.StatusCreated, playerUUID)
+	c.IndentedJSON(http.StatusCreated, player.PlayerUUID)
 }
 
 func main() {
@@ -98,8 +125,7 @@ func main() {
 	// TODO: Better configuration of trusted proxy
 	router.SetTrustedProxies(nil)
 
-	var db = "projects/development-344820/instances/cymbal-games/databases/my_game"
-	router.Use(setSpannerConnection(db))
+	router.Use(setSpannerConnection())
 
 	router.POST("/players", createPlayer)
 	router.GET("/players", getPlayerUUIDs)
@@ -107,6 +133,5 @@ func main() {
 	// router.GET("/player/login", getPlayerByLogin)
 	router.GET("/players/:id/stats", getPlayerStats)
 
-	// TODO: Better configuration of host
-	router.Run("localhost:8080")
+	router.Run(configuration.Server.URL())
 }
