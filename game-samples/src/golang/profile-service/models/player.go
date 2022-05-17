@@ -129,13 +129,12 @@ func (p *Player) AddPlayer(ctx context.Context, client spanner.Client) error {
 		return err
 	}
 
-	// return player object if successful, else return nil
+	// return empty error on success
 	return nil
 }
 
 // TODO: Currently limits to 10k by default. This shouldn't be exposed to public API usage
 func GetPlayerUUIDs(ctx context.Context, client spanner.Client) ([]string, error) {
-
 	ro := client.ReadOnlyTransaction()
 	stmt := spanner.Statement{SQL: `SELECT playerUUID FROM players LIMIT 10000`}
 	iter := ro.Query(ctx, stmt)

@@ -15,7 +15,7 @@ command line for the test.
 
 Provided generators do the following:
 
-- _authentication_server.py_: mimics player signup and player retrieval by UUID. Login is not handled currently due to the necessity to track password creation.
+- _authentication\_server.py_: mimics player signup and player retrieval by UUID. Login is not handled currently due to the necessity to track password creation.
 
 Run on the CLI:
 ```
@@ -28,7 +28,7 @@ locust --web-port 8090 -f authentication_server.py
 # Connect browser to http://localhost:8090
 ```
 
-- _match_server.py_: mimics game servers matching players together, and closing games out.
+- _match\_server.py_: mimics game servers matching players together, and closing games out.
 
 Run on the CLI:
 ```
@@ -39,6 +39,13 @@ Run on port 8091:
 ```
 locust --web-port 8091 -f match_server.py
 # Connect browser to http://localhost:8091
+```
+
+- _item\_generator.py_: generates some random items.
+
+Run on the CLI for 5 minutes:
+```
+locust -H http://127.0.0.1:8082 -f item_generator.py --headless -u=1 -r=1 -t=300s
 ```
 
 
