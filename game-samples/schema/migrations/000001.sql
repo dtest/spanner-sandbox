@@ -9,8 +9,10 @@ CREATE TABLE players (
 	account_balance NUMERIC,
 	is_logged_in BOOL,
 	last_login TIMESTAMP,
-	valid_email BOOL
+	valid_email BOOL,
+	current_game STRING(36)
 ) PRIMARY KEY (playerUUID);
 
 CREATE UNIQUE INDEX PlayerAuthentication ON players(email) STORING(password_hash);
 CREATE UNIQUE INDEX PlayerName ON players(player_name);
+CREATE INDEX PlayerGame ON players(current_game);

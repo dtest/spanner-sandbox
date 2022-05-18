@@ -5,5 +5,3 @@ CREATE TABLE games (
 	created TIMESTAMP,
 	finished TIMESTAMP
 ) PRIMARY KEY (gameUUID);
-
-ALTER TABLE players ADD COLUMN current_game STRING(36);

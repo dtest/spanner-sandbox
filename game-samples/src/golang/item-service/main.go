@@ -88,6 +88,52 @@ func getItem(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, item)
 }
 
+// Update a player balance with a provided amount. Result is a JSON object that contains PlayerUUID and AccountBalance
+func updatePlayerBalance(c *gin.Context) {
+	var player models.Player
+	var ledger models.PlayerLedger
+
+	if err := c.BindJSON(&ledger); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	ctx, client := getSpannerConnection(c)
+	err := ledger.UpdateBalance(ctx, client, &player)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	type PlayerBalance struct {
+		PlayerUUID, AccountBalance string
+	}
+
+	balance := PlayerBalance{PlayerUUID: player.PlayerUUID, AccountBalance: player.Account_balance.FloatString(2)}
+	c.IndentedJSON(http.StatusOK, balance)
+}
+
+func getPlayer(c *gin.Context) {
+	var player models.Player
+
+	ctx, client := getSpannerConnection(c)
+	err := player.GetPlayer(ctx, client)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, player)
+}
+
+// func addPlayerItem(c *gin.Context) {
+
+// }
+
+// func getPlayerItem(c *gin.Context) {
+
+// }
+
 func main() {
 	router := gin.Default()
 	// TODO: Better configuration of trusted proxy
@@ -97,7 +143,10 @@ func main() {
 
 	router.POST("/items", createItem)
 	router.GET("/items/:id", getItem)
+	router.PUT("/players/balance", updatePlayerBalance) // TODO: leverage profile service instead
+	router.GET("/players", getPlayer)
+	// router.POST("/players/items", addPlayerItem)
+	// router.GET("/players/items", getPlayerItem)
 
-	// TODO: Better configuration of host
 	router.Run(configuration.Server.URL())
 }

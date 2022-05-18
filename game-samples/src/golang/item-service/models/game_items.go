@@ -54,7 +54,6 @@ func (i *GameItem) Create(ctx context.Context, client spanner.Client) error {
 
 	// return empty error on success
 	return nil
-	// return errors.New("Testing")
 }
 
 func GetItemByUUID(ctx context.Context, client spanner.Client, itemUUID string) (GameItem, error) {
