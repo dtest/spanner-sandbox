@@ -25,6 +25,29 @@ type PlayerLedger struct {
 	Source       string  `json:"source"`
 }
 
+// Get a player's game session
+func GetPlayerSession(ctx context.Context, txn *spanner.ReadWriteTransaction, playerUUID string) (string, error) {
+	var session string
+
+	row, err := txn.ReadRow(ctx, "players", spanner.Key{playerUUID}, []string{"current_game"})
+	if err != nil {
+		return "", err
+	}
+
+	err = row.Columns(&session)
+	if err != nil {
+		return "", err
+	}
+
+	// Session is empty. That's an error
+	if session == "" {
+		errorMsg := fmt.Sprintf("Player '%s' isn't in a game currently.", playerUUID)
+		return "", errors.New(errorMsg)
+	}
+
+	return session, nil
+}
+
 // Retrieve a player of an open game. We only care about the Current_game and playerUUID attributes.
 func (p *Player) GetPlayer(ctx context.Context, client spanner.Client) error {
 	// Get player's new balance (read after write)

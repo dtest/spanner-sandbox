@@ -12,10 +12,13 @@ CREATE TABLE player_items
   playerUUID STRING(36) NOT NULL,
   itemUUID STRING(36) NOT NULL,
   price NUMERIC NOT NULL,
+  source STRING(MAX) NOT NULL,
+  game_session STRING(36) NOT NULL,
   acquire_time TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
   expires_time TIMESTAMP,
   visible BOOL NOT NULL DEFAULT(true),
-  FOREIGN KEY (itemUUID) REFERENCES game_items (itemUUID)
+  FOREIGN KEY (itemUUID) REFERENCES game_items (itemUUID),
+  FOREIGN KEY (game_session) REFERENCES games (gameUUID)
 ) PRIMARY KEY (playerUUID, itemUUID),
     INTERLEAVE IN PARENT players ON DELETE CASCADE;
 

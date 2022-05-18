@@ -74,6 +74,20 @@ func createItem(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, item.ItemUUID)
 }
 
+// TODO: used by game server to generate load. Should not be called by other entities,
+//  so restrictions should be implemented
+func getItemUUIDs(c *gin.Context) {
+	ctx, client := getSpannerConnection(c)
+
+	items, err := models.GetItemUUIDs(ctx, client)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No players exist"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, items)
+}
+
 func getItem(c *gin.Context) {
 	var itemUUID = c.Param("id")
 
@@ -126,9 +140,23 @@ func getPlayer(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, player)
 }
 
-// func addPlayerItem(c *gin.Context) {
+func addPlayerItem(c *gin.Context) {
+	var playerItem models.PlayerItem
 
-// }
+	if err := c.BindJSON(&playerItem); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	ctx, client := getSpannerConnection(c)
+	err := playerItem.Add(ctx, client)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, playerItem)
+}
 
 // func getPlayerItem(c *gin.Context) {
 
@@ -141,11 +169,12 @@ func main() {
 
 	router.Use(setSpannerConnection())
 
+	router.GET("/items", getItemUUIDs)
 	router.POST("/items", createItem)
 	router.GET("/items/:id", getItem)
 	router.PUT("/players/balance", updatePlayerBalance) // TODO: leverage profile service instead
 	router.GET("/players", getPlayer)
-	// router.POST("/players/items", addPlayerItem)
+	router.POST("/players/items", addPlayerItem)
 	// router.GET("/players/items", getPlayerItem)
 
 	router.Run(configuration.Server.URL())
