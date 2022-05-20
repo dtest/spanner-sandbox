@@ -4,7 +4,7 @@ import json
 import random
 import requests
 
-# Generate player load with 5:1 reads to write
+# Players generate items and money at 5:1 ratio. We don't want to devalue the currency!
 class GameLoad(HttpUser):
     def on_start(self):
         self.getItems()
@@ -33,7 +33,7 @@ class GameLoad(HttpUser):
             except KeyError:
                 response.failure("Response did not contain expected key 'playerUUID'")
 
-    @task
+    @task(5)
     def acquireItem(self):
         headers = {"Content-Type": "application/json"}
 

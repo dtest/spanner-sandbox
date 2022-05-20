@@ -128,10 +128,8 @@ func updatePlayerBalance(c *gin.Context) {
 }
 
 func getPlayer(c *gin.Context) {
-	var player models.Player
-
 	ctx, client := getSpannerConnection(c)
-	err := player.GetPlayer(ctx, client)
+	player, err := models.GetPlayer(ctx, client)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return

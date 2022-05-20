@@ -18,19 +18,31 @@ import requests
 
 
 # TODO: Matchmaking should ideally be handled by Agones. Once done, Locust test would convert to testing Agones match-making
+# Create and close game matches
 class GameMatch(HttpUser):
 
     @task
     def createGame(self):
         headers = {"Content-Type": "application/json"}
 
-        # Create the game, keep track of game_id
-        # TODO: Make this configurable
+        # Create the game
+        # TODO: Make number of players configurable
         # data = {"numPlayers": 10}
         res = self.client.post("/games/create", headers=headers)
 
-        # Close game
-        data = {"gameUUID": res.text.replace('"', '')}
-        self.client.put("/games/close", data=json.dumps(data), headers=headers)
+        # TODO: Store the response into memory to be used to close the game later, to avoid a call to the DB
+
+    @task
+    def closeGame(self):
+        # Get a game that's currently open, then close it
+        headers = {"Content-Type": "application/json"}
+        with self.client.get("/games/open", headers=headers, catch_response=True) as response:
+            try:
+                data = {"gameUUID": response.json()["gameUUID"]}
+                self.client.put("/games/close", data=json.dumps(data), headers=headers)
+            except json.JSONDecodeError:
+                response.failure("Response could not be decoded as JSON")
+            except KeyError:
+                response.failure("Response did not contain expected key 'playerUUID'")
 
 

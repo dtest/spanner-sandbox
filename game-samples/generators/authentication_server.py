@@ -40,4 +40,4 @@ class PlayerLoad(HttpUser):
         pUUID = pUUIDs[random.randint(0, len(pUUIDs)-1)]
         headers = {"Content-Type": "application/json"}
 
-        self.client.get(f"/players/{pUUID}", headers=headers)
+        self.client.get(f"/players/{pUUID}", headers=headers, name="/players/[playerUUID]")

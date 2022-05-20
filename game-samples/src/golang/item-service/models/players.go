@@ -49,9 +49,11 @@ func GetPlayerSession(ctx context.Context, txn *spanner.ReadWriteTransaction, pl
 }
 
 // Retrieve a player of an open game. We only care about the Current_game and playerUUID attributes.
-func (p *Player) GetPlayer(ctx context.Context, client spanner.Client) error {
+func GetPlayer(ctx context.Context, client spanner.Client) (Player, error) {
+	var p Player
+
 	// Get player's new balance (read after write)
-	query := fmt.Sprintf("SELECT playerUUID, Current_game FROM (SELECT playerUUID, Current_game FROM players WHERE current_game IS NOT NULL) TABLESAMPLE RESERVOIR (%d ROWS)", 1)
+	query := fmt.Sprintf("SELECT playerUUID, Current_game FROM (SELECT playerUUID, Current_game FROM players WHERE current_game IS NOT NULL LIMIT 10000) TABLESAMPLE RESERVOIR (%d ROWS)", 1)
 	stmt := spanner.Statement{SQL: query}
 
 	iter := client.Single().Query(ctx, stmt)
@@ -62,14 +64,14 @@ func (p *Player) GetPlayer(ctx context.Context, client spanner.Client) error {
 			break
 		}
 		if err != nil {
-			return err
+			return Player{}, err
 		}
 
-		if err := row.ToStruct(p); err != nil {
-			return err
+		if err := row.ToStruct(&p); err != nil {
+			return Player{}, err
 		}
 	}
-	return nil
+	return p, nil
 }
 
 func (l *PlayerLedger) UpdateBalance(ctx context.Context, client spanner.Client, p *Player) error {

@@ -104,6 +104,32 @@ func (g Game) getGamePlayers(ctx context.Context, txn *spanner.ReadWriteTransact
 	return playerUUIDs, players, nil
 }
 
+// Retrieve an open game.
+func GetOpenGame(ctx context.Context, client spanner.Client) (Game, error) {
+	var g Game
+
+	// Get player's new balance (read after write)
+	query := fmt.Sprintf("SELECT gameUUID FROM (SELECT gameUUID FROM games WHERE finished IS NULL) TABLESAMPLE RESERVOIR (%d ROWS)", 1)
+	stmt := spanner.Statement{SQL: query}
+
+	iter := client.Single().Query(ctx, stmt)
+	defer iter.Stop()
+	for {
+		row, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return Game{}, err
+		}
+
+		if err := row.ToStruct(&g); err != nil {
+			return Game{}, err
+		}
+	}
+	return g, nil
+}
+
 // Given a list of players and a winner's UUID, update players of a game
 // Updating players involves closing out the game (current_game = NULL) and
 // updating their game stats. Specifically, we are incrementing games_played.
@@ -145,6 +171,7 @@ func (g Game) updateGamePlayers(ctx context.Context, players []Player, txn *span
 
 // Create a new game and assign players
 // Players that are not currently playing a game are eligble to be selected for the new game
+// Current implementation allows for less than numPlayers to be placed in a game
 func (g *Game) CreateGame(ctx context.Context, client spanner.Client) error {
 	// Initialize game values
 	g.GameUUID = generateUUID()
@@ -153,8 +180,10 @@ func (g *Game) CreateGame(ctx context.Context, client spanner.Client) error {
 
 	// Create and assign
 	_, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+		var m []*spanner.Mutation
+
 		// get players
-		query := fmt.Sprintf("SELECT playerUUID FROM (SELECT playerUUID FROM players WHERE current_game IS NULL) TABLESAMPLE RESERVOIR (%d ROWS)", numPlayers)
+		query := fmt.Sprintf("SELECT playerUUID FROM (SELECT playerUUID FROM players WHERE current_game IS NULL LIMIT 10000) TABLESAMPLE RESERVOIR (%d ROWS)", numPlayers)
 		stmt := spanner.Statement{SQL: query}
 		iter := txn.Query(ctx, stmt)
 
@@ -176,20 +205,18 @@ func (g *Game) CreateGame(ctx context.Context, client spanner.Client) error {
 
 		// Create the game
 		gCols := []string{"gameUUID", "players", "created"}
-		txn.BufferWrite([]*spanner.Mutation{
-			spanner.Insert("games", gCols, []interface{}{g.GameUUID, playerUUIDs, time.Now()}),
-		})
+		m = append(m, spanner.Insert("games", gCols, []interface{}{g.GameUUID, playerUUIDs, time.Now()}))
 
 		// Update players to lock into this game
+
 		for _, p := range playerUUIDs {
 			pCols := []string{"playerUUID", "current_game"}
-
-			txn.BufferWrite([]*spanner.Mutation{
-				spanner.Update("players", pCols, []interface{}{p, g.GameUUID}),
-			})
+			m = append(m, spanner.Update("players", pCols, []interface{}{p, g.GameUUID}))
 		}
 
-		return err
+		txn.BufferWrite(m)
+
+		return nil
 	})
 
 	if err != nil {

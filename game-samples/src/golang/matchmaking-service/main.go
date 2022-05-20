@@ -88,6 +88,17 @@ func closeGame(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, game.Winner)
 }
 
+func getOpenGame(c *gin.Context) {
+	ctx, client := getSpannerConnection(c)
+	game, err := models.GetOpenGame(ctx, client)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, game)
+}
+
 func main() {
 	router := gin.Default()
 	// TODO: Better configuration of trusted proxy
@@ -95,6 +106,7 @@ func main() {
 
 	router.Use(setSpannerConnection())
 
+	router.GET("/games/open", getOpenGame)
 	router.POST("/games/create", createGame)
 	router.PUT("/games/close", closeGame)
 
