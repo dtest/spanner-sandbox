@@ -9,6 +9,7 @@ CREATE TABLE game_items
 
 CREATE TABLE player_items
 (
+  playerItemUUID STRING(36) NOT NULL,
   playerUUID STRING(36) NOT NULL,
   itemUUID STRING(36) NOT NULL,
   price NUMERIC NOT NULL,
@@ -19,7 +20,7 @@ CREATE TABLE player_items
   visible BOOL NOT NULL DEFAULT(true),
   FOREIGN KEY (itemUUID) REFERENCES game_items (itemUUID),
   FOREIGN KEY (game_session) REFERENCES games (gameUUID)
-) PRIMARY KEY (playerUUID, itemUUID),
+) PRIMARY KEY (playerUUID, playerItemUUID),
     INTERLEAVE IN PARENT players ON DELETE CASCADE;
 
 CREATE TABLE player_ledger_entries (

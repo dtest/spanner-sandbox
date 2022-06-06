@@ -110,6 +110,5 @@ func main() {
 	router.POST("/games/create", createGame)
 	router.PUT("/games/close", closeGame)
 
-	// TODO: Better configuration of host
 	router.Run(configuration.Server.URL())
 }

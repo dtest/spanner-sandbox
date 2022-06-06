@@ -52,7 +52,6 @@ func GetPlayerSession(ctx context.Context, txn *spanner.ReadWriteTransaction, pl
 func GetPlayer(ctx context.Context, client spanner.Client) (Player, error) {
 	var p Player
 
-	// Get player's new balance (read after write)
 	query := fmt.Sprintf("SELECT playerUUID, Current_game FROM (SELECT playerUUID, Current_game FROM players WHERE current_game IS NOT NULL LIMIT 10000) TABLESAMPLE RESERVOIR (%d ROWS)", 1)
 	stmt := spanner.Statement{SQL: query}
 
@@ -125,7 +124,7 @@ func (l *PlayerLedger) UpdateBalance(ctx context.Context, client spanner.Client,
 
 		stmt = spanner.Statement{
 			SQL: `INSERT INTO player_ledger_entries (playerUUID, amount, game_session, source, entryDate)
-				VALUES (@playeruUID, @amount, @game, @source, PENDING_COMMIT_TIMESTAMP())`,
+				VALUES (@playerUUID, @amount, @game, @source, PENDING_COMMIT_TIMESTAMP())`,
 			Params: map[string]interface{}{
 				"playerUUID": l.PlayerUUID,
 				"amount":     l.Amount,

@@ -9,14 +9,15 @@ import (
 )
 
 type PlayerItem struct {
-	PlayerUUID   string           `json:"playerUUID"`
-	ItemUUID     string           `json:"itemUUID"`
-	Source       string           `json:"source"`
-	Game_session string           `json:"game_session"`
-	Price        big.Rat          `json:"price"`
-	AcquireTime  time.Time        `json:"acquire_time"`
-	ExpiresTime  spanner.NullTime `json:"expires_time"`
-	Visible      bool             `json:"visible"`
+	PlayerItemUUID string           `json:"playerItemUUID" binding:"omitempty,uuid4"`
+	PlayerUUID     string           `json:"playerUUID" binding:"required,uuid4"`
+	ItemUUID       string           `json:"itemUUID" binding:"required,uuid4"`
+	Source         string           `json:"source"	binding:"required"`
+	Game_session   string           `json:"game_session" binding:"omitempty,uuid4"`
+	Price          big.Rat          `json:"price"`
+	AcquireTime    time.Time        `json:"acquire_time"`
+	ExpiresTime    spanner.NullTime `json:"expires_time"`
+	Visible        bool             `json:"visible"`
 }
 
 // Function adds an item to a player. Stores the item's value as price at the time
@@ -42,11 +43,14 @@ func (pi *PlayerItem) Add(ctx context.Context, client spanner.Client) error {
 
 		pi.Game_session = session
 
+		pi.PlayerItemUUID = generateUUID()
+
 		// Insert
-		cols := []string{"playerUUID", "itemUUID", "price", "source", "game_session"}
+		cols := []string{"playerItemUUID", "playerUUID", "itemUUID", "price", "source", "game_session"}
 
 		txn.BufferWrite([]*spanner.Mutation{
-			spanner.Insert("player_items", cols, []interface{}{pi.PlayerUUID, pi.ItemUUID, pi.Price, pi.Source, pi.Game_session}),
+			spanner.Insert("player_items", cols,
+				[]interface{}{pi.PlayerItemUUID, pi.PlayerUUID, pi.ItemUUID, pi.Price, pi.Source, pi.Game_session}),
 		})
 
 		return nil

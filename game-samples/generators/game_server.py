@@ -4,7 +4,7 @@ import json
 import random
 import requests
 
-# Players generate items and money at 5:1 ratio. We don't want to devalue the currency!
+# Players generate items and money at 5:2 ratio. We don't want to devalue the currency!
 class GameLoad(HttpUser):
     def on_start(self):
         self.getItems()
@@ -19,7 +19,7 @@ class GameLoad(HttpUser):
     def generateAmount(self):
         return str(round(random.uniform(1.01, 49.99), 2))
 
-    @task
+    @task(2)
     def acquireMoney(self):
         headers = {"Content-Type": "application/json"}
 

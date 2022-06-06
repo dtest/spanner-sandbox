@@ -5,14 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"net/mail"
 	"time"
 
 	spanner "cloud.google.com/go/spanner"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	iterator "google.golang.org/api/iterator"
 )
+
+var validate *validator.Validate
 
 type PlayerStats struct {
 	Games_played spanner.NullInt64 `json:"games_played"`
@@ -20,11 +22,11 @@ type PlayerStats struct {
 }
 
 type Player struct {
-	PlayerUUID      string `json:"playerUUID"`
-	Player_name     string `json:"player_name" binding:"required"`
-	Email           string `json:"email" binding:"required"`
-	Password        string `json:"password" binding:"required"` // not stored
-	Password_hash   []byte `json:"password_hash"`
+	PlayerUUID      string `json:"playerUUID" validate:"omitempty,uuid4"`
+	Player_name     string `json:"player_name" validate:"required_with=Password Email"`
+	Email           string `json:"email" validate:"required_with=Player_name Password,email"`
+	Password        string `json:"password" validate:"required_with=Player_name Email"` // not stored in DB
+	Password_hash   []byte `json:"password_hash"`                                       // stored in DB
 	created         time.Time
 	updated         time.Time
 	Stats           spanner.NullJSON `json:"stats"`
@@ -32,7 +34,11 @@ type Player struct {
 	last_login      time.Time
 	is_logged_in    bool
 	valid_email     bool
-	Current_game    string `json:"current_game"`
+	Current_game    string `json:"current_game" validate:"omitempty,uuid4"`
+}
+
+func init() {
+	validate = validator.New()
 }
 
 // Helper function to read rows from Spanner.
@@ -56,12 +62,6 @@ func readRows(iter *spanner.RowIterator) ([]spanner.Row, error) {
 	return rows, nil
 }
 
-// TODO check for valid domains, and not allow local domains?
-func validateEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
 // TODO complexity validation
 func hashPassword(pwd string) ([]byte, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
@@ -81,10 +81,26 @@ func generateUUID() string {
 	return uuid.NewString()
 }
 
+func (p *Player) Validate() error {
+	validate = validator.New()
+	err := validate.Struct(p)
+	if err != nil {
+		return err
+	}
+
+	// validationErrors := err.(validator.ValidationErrors)
+	if _, ok := err.(*validator.InvalidValidationError); ok {
+		return err
+	}
+
+	return nil
+}
+
 func (p *Player) AddPlayer(ctx context.Context, client spanner.Client) error {
-	// Ensure email is valid
-	if err := validateEmail(p.Email); err != true {
-		return fmt.Errorf("New player has invalid email '%s'", p.Email)
+	// Validate based on struct validation rules
+	err := p.Validate()
+	if err != nil {
+		return err
 	}
 
 	// take supplied password+salt, hash. Store in user_password
@@ -161,7 +177,7 @@ func GetPlayerUUIDs(ctx context.Context, client spanner.Client) ([]string, error
 
 func GetPlayerByUUID(ctx context.Context, client spanner.Client, uuid string) (Player, error) {
 	row, err := client.Single().ReadRow(ctx, "players",
-		spanner.Key{uuid}, []string{"email"})
+		spanner.Key{uuid}, []string{"player_name", "email"})
 	if err != nil {
 		return Player{}, err
 	}

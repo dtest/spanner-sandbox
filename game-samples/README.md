@@ -101,5 +101,5 @@ python -V
 Next, install pip3 dependencies:
 
 ```
-pip3 install -r requirements
+pip3 install -r requirements.txt
 ```

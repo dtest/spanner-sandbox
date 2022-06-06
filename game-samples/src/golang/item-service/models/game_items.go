@@ -88,7 +88,7 @@ func GetItemPrice(ctx context.Context, txn *spanner.ReadWriteTransaction, itemUU
 }
 
 func (i *GameItem) Create(ctx context.Context, client spanner.Client) error {
-	// Initialize game values
+	// Initialize item values
 	i.ItemUUID = generateUUID()
 
 	if i.AvailableTime.IsZero() {

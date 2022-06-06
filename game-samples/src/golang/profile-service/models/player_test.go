@@ -1,42 +1,49 @@
 package models
 
-import "testing"
+import (
+	"testing"
+)
+
+// var validate *validator.Validate
 
 func TestValidEmails(t *testing.T) {
-	var tests = []string{"good@gmail", "good@gmail.com", "good@somedomain"}
+	var tests = []string{"good@gmail.com", "good@somedomain.net", "good.email@somedomain.org"}
 
-	for _, email := range tests {
-		res := validateEmail(email)
+	for _, testEmail := range tests {
+		var player = Player{Email: testEmail, Password: "testpassword", Player_name: "Test Player"}
 
-		t.Logf("Testing '%s'", email)
+		t.Logf("Testing '%s'", testEmail)
 
-		if res == false {
+		err := player.Validate()
+
+		if err != nil {
 			t.Error(
-				"For", email,
-				"expected", true,
-				"got", res,
+				"For", testEmail,
+				"expected", nil,
+				"got", err,
 			)
 		}
 	}
-
 }
 
 func TestInvalidEmails(t *testing.T) {
+	var tests = []string{"bademail", "bad@gmail"}
 
-	var tests = []string{"bademail"}
+	for _, testEmail := range tests {
+		var player = Player{Email: testEmail, Password: "testpassword", Player_name: "Test Player"}
 
-	for _, email := range tests {
-		res := validateEmail(email)
+		t.Logf("Testing '%s'", testEmail)
 
-		if res == true {
+		err := player.Validate()
+
+		if err == nil {
 			t.Error(
-				"For", email,
-				"expected", false,
-				"got", res,
+				"For", testEmail,
+				"expected", "Invalid email",
+				"got", err,
 			)
 		}
 	}
-
 }
 
 func TestHashPassword(t *testing.T) {
