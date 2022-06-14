@@ -54,6 +54,7 @@ func readRows(iter *spanner.RowIterator) ([]spanner.Row, error) {
 }
 
 // Validate that the order can be placed: Item is visible and not expired
+// TODO: Add logging to explain why sell order is invalid
 func validateSellOrder(pi PlayerItem) bool {
 	// Item is not visible, can't be listed
 	if !pi.Visible {
@@ -70,6 +71,7 @@ func validateSellOrder(pi PlayerItem) bool {
 }
 
 // Validate that the order can be fille: Order is active and not expired
+// TODO: Add logging to explain why purchase is invalid
 func validatePurchase(o TradeOrder) bool {
 	// Order is not active
 	if !o.Active {
@@ -86,6 +88,7 @@ func validatePurchase(o TradeOrder) bool {
 }
 
 // Validate that a buyer can buy this item.
+// TODO: Add logging to explain why buyer is invalid
 func validateBuyer(b Player, o TradeOrder) bool {
 	// Lister can't be the same as buyer
 	if b.PlayerUUID == o.Lister {
@@ -122,6 +125,7 @@ func GetRandomOpenOrder(ctx context.Context, client spanner.Client) (TradeOrder,
 	stmt := spanner.Statement{SQL: query}
 
 	iter := client.Single().Query(ctx, stmt)
+
 	defer iter.Stop()
 	for {
 		row, err := iter.Next()
@@ -136,6 +140,7 @@ func GetRandomOpenOrder(ctx context.Context, client spanner.Client) (TradeOrder,
 			return TradeOrder{}, err
 		}
 	}
+
 	return order, nil
 }
 

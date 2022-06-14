@@ -2,9 +2,10 @@ package models
 
 import (
 	"testing"
-)
 
-// var validate *validator.Validate
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+)
 
 func TestValidEmails(t *testing.T) {
 	var tests = []string{"good@gmail.com", "good@somedomain.net", "good.email@somedomain.org"}
@@ -16,13 +17,7 @@ func TestValidEmails(t *testing.T) {
 
 		err := player.Validate()
 
-		if err != nil {
-			t.Error(
-				"For", testEmail,
-				"expected", nil,
-				"got", err,
-			)
-		}
+		assert.Nil(t, err)
 	}
 }
 
@@ -36,13 +31,7 @@ func TestInvalidEmails(t *testing.T) {
 
 		err := player.Validate()
 
-		if err == nil {
-			t.Error(
-				"For", testEmail,
-				"expected", "Invalid email",
-				"got", err,
-			)
-		}
+		assert.NotNil(t, err)
 	}
 }
 
@@ -52,23 +41,20 @@ func TestHashPassword(t *testing.T) {
 	for _, pass := range tests {
 		hash, err := hashPassword(pass)
 
-		if err != nil {
-			t.Error(
-				"For", pass,
-				"expected", "no error",
-				"got", err,
-			)
-		}
+		assert.Nil(t, err)
 
 		err = validatePassword(pass, hash)
 
-		if err != nil {
-			t.Error(
-				"For", pass,
-				"expected", "no error",
-				"got", err,
-			)
-		}
+		assert.Nil(t, err)
+
 	}
+
+}
+
+func TestGenerateUUID(t *testing.T) {
+	id := generateUUID()
+	_, err := uuid.Parse(id)
+
+	assert.Nil(t, err)
 
 }

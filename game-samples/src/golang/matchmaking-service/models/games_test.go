@@ -1,6 +1,11 @@
 package models
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+)
 
 func TestDetermineWinnerWithPlayers(t *testing.T) {
 	var tests = []string{"ea32ff20-e10f-42c4-80d1-e0e1970eeb56", "3349f46a-215d-42e9-ab3a-759883cfeb2e",
@@ -13,13 +18,7 @@ func TestDetermineWinnerWithPlayers(t *testing.T) {
 
 	res := determineWinner(tests)
 
-	if res == "" {
-		t.Error(
-			"For", tests,
-			"expected", "not empty string",
-			"got", "empty string",
-		)
-	}
+	assert.NotEmpty(t, res)
 }
 
 func TestDetermineWinnerWithoutPlayers(t *testing.T) {
@@ -27,11 +26,13 @@ func TestDetermineWinnerWithoutPlayers(t *testing.T) {
 
 	res := determineWinner(tests)
 
-	if res != "" {
-		t.Error(
-			"For", tests,
-			"expected", "empty string",
-			"got", "not empty string",
-		)
-	}
+	assert.Empty(t, res)
+}
+
+func TestGenerateUUID(t *testing.T) {
+	id := generateUUID()
+	_, err := uuid.Parse(id)
+
+	assert.Nil(t, err)
+
 }

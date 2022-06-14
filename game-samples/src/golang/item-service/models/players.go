@@ -115,6 +115,7 @@ func (l *PlayerLedger) UpdateBalance(ctx context.Context, client spanner.Client,
 			}
 			var accountBalance big.Rat
 			var gameSession string
+			// TODO: Better error message if current_game is empty
 			if err := row.Columns(&accountBalance, &gameSession); err != nil {
 				return err
 			}

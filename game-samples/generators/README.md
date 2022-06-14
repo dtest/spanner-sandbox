@@ -45,7 +45,7 @@ locust --web-port 8091 -f match_server.py
 
 Run on the CLI for 5 minutes:
 ```
-locust -H http://127.0.0.1:8082 -f item_generator.py --headless -u=1 -r=1 -t=300s
+locust -H http://127.0.0.1:8082 -f item_generator.py --headless -u=1 -r=1 -t=60s
 ```
 
 - _game\_server.py_: mimics adding loot and money to players during the course of a game
@@ -59,6 +59,19 @@ Run on port 8092:
 ```
 locust --web-port 8092 -f game_server.py
 # Connect browser to http://localhost:8092
+```
+
+- _trading\_server.py_: mimics posting and closing orders on trading post
+
+Run on the CLI:
+```
+locust -H http://127.0.0.1:8083 -f trading_server.py --headless -u=1 -r=1 -t=10s
+```
+
+Run on port 8093:
+```
+locust --web-port 8093 -f trading_server.py
+# Connect browser to http://localhost:8093
 ```
 
 

@@ -1,28 +1,54 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/spf13/viper"
+)
 
 // Configurations exported
-type Configurations struct {
-	Server  ServerConfigurations
-	Spanner SpannerConfigurations
+type Config struct {
+	Server  ServerConfig
+	Spanner SpannerConfig
 }
 
 // ServerConfigurations exported
-type ServerConfigurations struct {
+type ServerConfig struct {
 	Host string
 	Port int
 }
 
 // DatabaseConfigurations exported
-type SpannerConfigurations struct {
+type SpannerConfig struct {
 	Project_id      string
 	Instance_id     string
 	Database_id     string
 	CredentialsFile string
 }
 
-func (c *SpannerConfigurations) URL() string {
+func NewConfig() (*Config, error) {
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.SetConfigType("yml")
+
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Error reading config file, %s", err.Error())
+	}
+
+	viper.SetDefault("server.host", "localhost")
+	viper.SetDefault("server.port", 8081)
+
+	var c Config
+
+	err := viper.Unmarshal(&c)
+	if err != nil {
+		fmt.Printf("Unable to decode into struct, %v", err)
+	}
+
+	return &c, nil
+}
+
+func (c *SpannerConfig) DB() string {
 	return fmt.Sprintf(
 		"projects/%s/instances/%s/databases/%s",
 		c.Project_id,
@@ -31,7 +57,7 @@ func (c *SpannerConfigurations) URL() string {
 	)
 }
 
-func (c *ServerConfigurations) URL() string {
+func (c *ServerConfig) URL() string {
 	return fmt.Sprintf(
 		"%s:%d",
 		c.Host,
