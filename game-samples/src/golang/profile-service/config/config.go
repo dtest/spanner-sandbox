@@ -20,23 +20,31 @@ type ServerConfig struct {
 
 // DatabaseConfigurations exported
 type SpannerConfig struct {
-	Project_id      string
-	Instance_id     string
-	Database_id     string
-	CredentialsFile string
+	Project_id      string `mapstructure:"PROJECT_ID" yaml:"project_id,omitempty"`
+	Instance_id     string `mapstructure:"INSTANCE_ID" yaml:"instance_id,omitempty"`
+	Database_id     string `mapstructure:"DATABASE_ID" yaml:"database_id,omitempty"`
+	CredentialsFile string `mapstructure:"CREDENTIALS_FILE" yaml:"credentials_file,omitempty"`
 }
 
-func NewConfig() (*Config, error) {
+func NewConfig() (Config, error) {
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yml")
 
+	viper.AutomaticEnv()
+
+	// Server defaults
+	viper.SetDefault("server.host", "localhost")
+	viper.SetDefault("server.port", 8080)
+
+	// Bind environment variable override
+	viper.BindEnv("spanner.project_id", "SPANNER_PROJECT_ID")
+	viper.BindEnv("spanner.instance_id", "SPANNER_INSTANCE_ID")
+	viper.BindEnv("spanner.database_id", "SPANNER_DATABASE_ID")
+
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Printf("Error reading config file, %s", err.Error())
 	}
-
-	viper.SetDefault("server.host", "localhost")
-	viper.SetDefault("server.port", 8080)
 
 	var c Config
 
@@ -45,7 +53,7 @@ func NewConfig() (*Config, error) {
 		fmt.Printf("Unable to decode into struct, %v", err)
 	}
 
-	return &c, nil
+	return c, nil
 }
 
 func (c *SpannerConfig) DB() string {

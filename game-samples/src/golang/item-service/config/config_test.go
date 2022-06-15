@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"os"
 	"regexp"
 	"testing"
 
@@ -49,4 +50,15 @@ spanner:
 	assert.Nil(t, err)
 
 	assert.Regexp(t, regexp.MustCompile(`^projects/[a-z0-9-]*/instances/[a-z0-9-]*/databases/[a-z0-9-]*$`), c.Spanner.DB())
+}
+
+func TestEnvironmentVariables(t *testing.T) {
+	os.Setenv("SPANNER_PROJECT_ID", "test-project")
+	os.Setenv("SPANNER_INSTANCE_ID", "test-instance")
+	os.Setenv("SPANNER_DATABASE_ID", "test-database")
+
+	c, err := NewConfig()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "projects/test-project/instances/test-instance/databases/test-database", c.Spanner.DB())
 }

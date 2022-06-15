@@ -13,7 +13,7 @@ import (
 )
 
 // Mutator to create spanner context and client, and set them in gin
-func setSpannerConnection(c *config.Config) gin.HandlerFunc {
+func setSpannerConnection(c config.Config) gin.HandlerFunc {
 	ctx := context.Background()
 	client, err := spanner.NewClient(ctx, c.Spanner.DB())
 
