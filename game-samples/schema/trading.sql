@@ -51,4 +51,4 @@ CREATE TABLE trade_orders
   FOREIGN KEY (playerItemUUID) REFERENCES player_items (playerItemUUID)
 ) PRIMARY KEY (orderUUID);
 
-CREATE UNIQUE INDEX TradeItem ON trade_orders(playerItemUUID, active);
+CREATE UNIQUE INDEX TradeItem ON trade_orders(playerItemUUID, active)

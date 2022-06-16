@@ -25,4 +25,4 @@ CREATE UNIQUE INDEX PlayerAuthentication ON players(email) STORING (password_has
 
 CREATE INDEX PlayerGame ON players(current_game);
 
-CREATE UNIQUE INDEX PlayerName ON players(player_name);
+CREATE UNIQUE INDEX PlayerName ON players(player_name)
