@@ -9,15 +9,27 @@ profile-test:
 
 profile-test-integration:
 	echo "Running integration tests for profile service"
-	cd src/golang/profile-service && docker build . -t profile-service && go test --tags=integration ./...
+	cd src/golang/profile-service \
+		&& docker build . -t profile-service \
+		&& mkdir -p test_data \
+		&& cp ../../../schema/players.sql test_data/schema.sql \
+		&& go test --tags=integration ./...
 
 matchmaking:
 	echo "Building matchmaking service"
 	cd src/golang/matchmaking-service && GOOS=linux GOARCH=386 go build -o ${BUILD_DIR}/matchmaking-service main.go
 
 matchmaking-test:
-	echo "Testing matchmaking service"
-	cd src/golang/matchmaking-service && go test ./...
+	echo "Testing unit tests for matchmaking service"
+	cd src/golang/matchmaking-service && go test -short ./...
+
+matchmaking-test-integration:
+	echo "Running integration tests for matchmaking service"
+	cd src/golang/matchmaking-service \
+		&& docker build . -t matchmaking-service \
+		&& mkdir -p test_data \
+		&& cp ../../../schema/players.sql test_data/schema.sql \
+		&& go test --tags=integration ./...
 
 item:
 	echo "Building item service"
@@ -37,7 +49,7 @@ tradepost-test:
 
 test-all-unit: profile-test matchmaking-test item-test tradepost-test
 
-test-all-integration: profile-test-integration
+test-all-integration: profile-test-integration matchmaking-test-integration
 
 test-all: test-all-unit test-all-integration
 
