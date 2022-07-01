@@ -17,7 +17,6 @@ package models
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -191,7 +190,7 @@ func GetPlayerUUIDs(ctx context.Context, client spanner.Client) ([]string, error
 
 func GetPlayerByUUID(ctx context.Context, client spanner.Client, uuid string) (Player, error) {
 	row, err := client.Single().ReadRow(ctx, "players",
-		spanner.Key{uuid}, []string{"player_name", "email"})
+		spanner.Key{uuid}, []string{"playerUUID", "player_name", "email", "stats"})
 	if err != nil {
 		return Player{}, err
 	}
@@ -210,22 +209,3 @@ func GetPlayerByUUID(ctx context.Context, client spanner.Client, uuid string) (P
 // func GetPlayerByLogin(name string, password string) (Player, error) {
 
 // }
-
-// Retrieves only the playerUUID and stats
-func (p *Player) GetPlayerStats(ctx context.Context, client spanner.Client) error {
-	row, err := client.Single().ReadRow(ctx, "players",
-		spanner.Key{p.PlayerUUID}, []string{"playerUUID", "stats"})
-
-	if err != nil {
-		return err
-	}
-
-	player := Player{}
-	err = row.ToStruct(&player)
-
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	return nil
-}

@@ -77,22 +77,6 @@ func getPlayerByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, player)
 }
 
-func getPlayerStats(c *gin.Context) {
-	var player models.Player
-	player.PlayerUUID = c.Param("id")
-
-	ctx, client := getSpannerConnection(c)
-
-	err := player.GetPlayerStats(ctx, client)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "player not found"})
-		return
-	}
-
-	c.IndentedJSON(http.StatusOK, player)
-}
-
 func createPlayer(c *gin.Context) {
 	var player models.Player
 
@@ -123,8 +107,8 @@ func main() {
 	router.POST("/players", createPlayer)
 	router.GET("/players", getPlayerUUIDs)
 	router.GET("/players/:id", getPlayerByID)
+	// TODO: Codelab takers should implement getPlayerBylogin function
 	// router.GET("/player/login", getPlayerByLogin)
-	router.GET("/players/:id/stats", getPlayerStats)
 
 	router.Run(configuration.Server.URL())
 }

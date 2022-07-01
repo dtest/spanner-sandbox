@@ -4,8 +4,12 @@ profile:
 	cd src/golang/profile-service && GOOS=linux GOARCH=386 go build -o ${BUILD_DIR}/profile-service main.go
 
 profile-test:
-	echo "Testing profile service"
-	cd src/golang/profile-service && go test ./...
+	echo "Running unit tests for profile service"
+	cd src/golang/profile-service && go test -short ./...
+
+profile-test-integration:
+	echo "Running integration tests for profile service"
+	cd src/golang/profile-service && docker build . -t profile-service && go test --tags=integration ./...
 
 matchmaking:
 	echo "Building matchmaking service"
@@ -31,10 +35,15 @@ tradepost-test:
 	echo "Testing tradepost service"
 	cd src/golang/tradepost-service && go test ./...
 
-test-all: profile-test matchmaking-test item-test tradepost-test
+test-all-unit: profile-test matchmaking-test item-test tradepost-test
+
+test-all-integration: profile-test-integration
+
+test-all: test-all-unit test-all-integration
 
 build-all: profile matchmaking item tradepost
 
 clean:
-	echo "Removing binaries"
+	echo "Running cleanup"
 	rm bin/*
+	docker rmi -f profile-service
