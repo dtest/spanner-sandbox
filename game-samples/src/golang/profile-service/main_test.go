@@ -165,7 +165,7 @@ func setupDatabase(ctx context.Context, ec Emulator) error {
 	// get schema statements from file
 	schema, _ := SCHEMAFILE.ReadFile("test_data/schema.sql")
 
-	// TODO: update this hack when the Spanner Emulator supports 'DEFAULT' syntax
+	// TODO: remove this when the Spanner Emulator supports 'DEFAULT' syntax
 	schemaStringFix := strings.Replace(string(schema), "account_balance NUMERIC NOT NULL DEFAULT (0.00),", "account_balance NUMERIC,", 1)
 
 	schemaStatements := strings.Split(schemaStringFix, ";")
@@ -323,7 +323,9 @@ func TestGetPlayers(t *testing.T) {
 	if len(data) != 0 {
 		for _, pUUID := range data {
 			response, err := http.Get(fmt.Sprintf("http://localhost/players/%s", pUUID))
-			assert.Nil(t, err)
+			if err != nil {
+				panic(err.Error())
+			}
 
 			body, err := ioutil.ReadAll(response.Body)
 			if err != nil {

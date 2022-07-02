@@ -25,11 +25,11 @@ import (
 )
 
 type GameItem struct {
-	ItemUUID      string    `json:"itemUUID"`
-	ItemName      string    `json:"item_name"`
-	ItemValue     big.Rat   `json:"item_value"`
-	AvailableTime time.Time `json:"available_time"`
-	Duration      int64     `json:"duration"`
+	ItemUUID       string    `json:"itemUUID"`
+	Item_name      string    `json:"item_name"`
+	Item_value     big.Rat   `json:"item_value"`
+	Available_time time.Time `json:"available_time"`
+	Duration       int64     `json:"duration"`
 }
 
 func generateUUID() string {
@@ -105,8 +105,8 @@ func (i *GameItem) Create(ctx context.Context, client spanner.Client) error {
 	// Initialize item values
 	i.ItemUUID = generateUUID()
 
-	if i.AvailableTime.IsZero() {
-		i.AvailableTime = time.Now()
+	if i.Available_time.IsZero() {
+		i.Available_time = time.Now()
 	}
 
 	// insert into spanner
@@ -117,9 +117,9 @@ func (i *GameItem) Create(ctx context.Context, client spanner.Client) error {
 			`,
 			Params: map[string]interface{}{
 				"itemUUID":      i.ItemUUID,
-				"itemName":      i.ItemName,
-				"itemValue":     i.ItemValue,
-				"availableTime": i.AvailableTime,
+				"itemName":      i.Item_name,
+				"itemValue":     i.Item_value,
+				"availableTime": i.Available_time,
 				"duration":      i.Duration,
 			},
 		}
@@ -138,7 +138,7 @@ func (i *GameItem) Create(ctx context.Context, client spanner.Client) error {
 
 func GetItemByUUID(ctx context.Context, client spanner.Client, itemUUID string) (GameItem, error) {
 	row, err := client.Single().ReadRow(ctx, "game_items",
-		spanner.Key{itemUUID}, []string{"item_name", "item_value", "available_time", "duration"})
+		spanner.Key{itemUUID}, []string{"itemUUID", "item_name", "item_value", "available_time", "duration"})
 	if err != nil {
 		return GameItem{}, err
 	}

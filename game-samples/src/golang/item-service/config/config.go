@@ -50,6 +50,8 @@ func NewConfig() (Config, error) {
 	viper.SetDefault("server.port", 8082)
 
 	// Bind environment variable override
+	viper.BindEnv("server.host", "SERVICE_HOST")
+	viper.BindEnv("server.port", "SERVICE_PORT")
 	viper.BindEnv("spanner.project_id", "SPANNER_PROJECT_ID")
 	viper.BindEnv("spanner.instance_id", "SPANNER_INSTANCE_ID")
 	viper.BindEnv("spanner.database_id", "SPANNER_DATABASE_ID")

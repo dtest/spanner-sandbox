@@ -11,12 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package main
 
 import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	spanner "cloud.google.com/go/spanner"
 	"github.com/dtest/spanner-game-item-service/config"
@@ -71,7 +73,7 @@ func getItemUUIDs(c *gin.Context) {
 
 	items, err := models.GetItemUUIDs(ctx, client)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No players exist"})
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No items exist"})
 		return
 	}
 
@@ -89,7 +91,16 @@ func getItem(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, item)
+	type ReturnGameItem struct {
+		ItemUUID, Item_name, Item_value string
+		Available_time                  time.Time
+		duration                        int64
+	}
+
+	gi := ReturnGameItem{ItemUUID: item.ItemUUID, Item_name: item.Item_name, Item_value: item.Item_value.FloatString(2),
+		Available_time: item.Available_time, duration: item.Duration}
+
+	c.IndentedJSON(http.StatusOK, gi)
 }
 
 // Update a player balance with a provided amount. Result is a JSON object that contains PlayerUUID and AccountBalance
@@ -143,7 +154,7 @@ func addPlayerItem(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, playerItem)
+	c.IndentedJSON(http.StatusCreated, playerItem)
 }
 
 // func getPlayerItem(c *gin.Context) {

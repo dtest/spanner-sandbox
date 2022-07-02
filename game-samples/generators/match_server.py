@@ -31,7 +31,7 @@ import json
 # Create and close game matches
 class GameMatch(HttpUser):
 
-    @task
+    @task(2)
     def createGame(self):
         headers = {"Content-Type": "application/json"}
 
@@ -42,7 +42,7 @@ class GameMatch(HttpUser):
 
         # TODO: Store the response into memory to be used to close the game later, to avoid a call to the DB
 
-    @task
+    @task(1)
     def closeGame(self):
         # Get a game that's currently open, then close it
         headers = {"Content-Type": "application/json"}

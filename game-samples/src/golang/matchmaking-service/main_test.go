@@ -227,7 +227,7 @@ func loadTestData(ctx context.Context, ec Emulator) error {
 		return err
 	}
 
-	fmt.Printf("Successfully loaded test data.")
+	fmt.Println("Successfully loaded test data.")
 	return nil
 }
 
