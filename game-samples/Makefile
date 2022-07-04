@@ -54,12 +54,22 @@ tradepost:
 	cd src/golang/tradepost-service && GOOS=linux GOARCH=386 go build -o ${BUILD_DIR}/tradepost-service main.go
 
 tradepost-test:
-	echo "Testing tradepost service"
+	echo "Running unit tests for tradepost service"
 	cd src/golang/tradepost-service && go test ./...
+
+tradepost-test-integration:
+	echo "Running integration tests for tradepost service"
+	cd src/golang/tradepost-service \
+		&& mkdir -p test_data \
+		&& docker build . -t tradepost-service \
+		&& cat ../../../schema/players.sql > test_data/schema.sql \
+		&& echo ";" >> test_data/schema.sql \
+		&& cat ../../../schema/trading.sql >> test_data/schema.sql \
+		&& go test --tags=integration ./...
 
 test-all-unit: profile-test matchmaking-test item-test tradepost-test
 
-test-all-integration: profile-test-integration matchmaking-test-integration item-test-integration
+test-all-integration: profile-test-integration matchmaking-test-integration item-test-integration tradepost-test-integration
 
 test-all: test-all-unit test-all-integration
 
@@ -68,4 +78,4 @@ build-all: profile matchmaking item tradepost
 clean:
 	echo "Running cleanup"
 	rm bin/*
-	docker rmi -f profile-service
+	docker rmi -f profile-service matchmaking-service item-service tradepost-service

@@ -59,14 +59,14 @@ func NewConfig() (Config, error) {
 	viper.BindEnv("spanner.database_id", "SPANNER_DATABASE_ID")
 
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Printf("Error reading config file, %s", err.Error())
+		fmt.Printf("[WARNING] %s\n", err.Error())
 	}
 
 	var c Config
 
 	err := viper.Unmarshal(&c)
 	if err != nil {
-		fmt.Printf("Unable to decode into struct, %v", err)
+		fmt.Printf("Unable to decode into struct, %v\n", err)
 	}
 
 	return c, nil

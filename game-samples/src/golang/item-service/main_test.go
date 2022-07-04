@@ -228,9 +228,6 @@ func loadTestData(ctx context.Context, ec Emulator) error {
 	playerColumns := []string{"playerUUID", "player_name", "email", "account_balance", "current_game"}
 	gameColumns := []string{"gameUUID", "players", "created"}
 
-	// emptyStatsStruct, _ := json.Marshal(models.PlayerStats{})
-	// emptyStats := string(emptyStatsStruct)
-
 	gameUUID := uuid.NewString()
 	playerUUID := []string{uuid.NewString(), uuid.NewString(), uuid.NewString(), uuid.NewString(), uuid.NewString()}
 	m := []*spanner.Mutation{
@@ -452,7 +449,4 @@ func TestPlayerAcquireItemsAndMoney(t *testing.T) {
 
 		assert.Equal(t, 201, response.StatusCode)
 	}
-
 }
-
-// router.POST("/players/items", addPlayerItem)

@@ -169,6 +169,12 @@ func (o *TradeOrder) Create(ctx context.Context, client spanner.Client) error {
 			return err
 		}
 
+		// Set expires to 1 day by default
+		if o.Expires.IsZero() {
+			currentTime := time.Now()
+			o.Expires = currentTime.Add(time.Hour * 24)
+		}
+
 		// Item is not visible or expired, so it can't be listed. That's an error
 		if !validateSellOrder(pi) {
 			errorMsg := fmt.Sprintf("Item (%s, %s) cannot be listed.", o.Lister, o.PlayerItemUUID)
@@ -177,11 +183,12 @@ func (o *TradeOrder) Create(ctx context.Context, client spanner.Client) error {
 
 		// Initialize order values
 		o.OrderUUID = generateUUID()
+		o.Active = true // TODO: Have to set this by default since testing with emulator does not support 'DEFAULT' schema option
 
 		// Insert the order
 		var m []*spanner.Mutation
-		cols := []string{"orderUUID", "playerItemUUID", "lister", "list_price", "trade_type"}
-		m = append(m, spanner.Insert("trade_orders", cols, []interface{}{o.OrderUUID, o.PlayerItemUUID, o.Lister, o.ListPrice, "sell"}))
+		cols := []string{"orderUUID", "playerItemUUID", "lister", "list_price", "trade_type", "expires", "active"}
+		m = append(m, spanner.Insert("trade_orders", cols, []interface{}{o.OrderUUID, o.PlayerItemUUID, o.Lister, o.ListPrice, "sell", o.Expires, o.Active}))
 
 		// Mark the item as invisible
 		cols = []string{"playerUUID", "playerItemUUID", "visible"}

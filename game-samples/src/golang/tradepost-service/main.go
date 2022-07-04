@@ -146,9 +146,8 @@ func main() {
 
 	router.GET("/trades/player_items", getPlayerItem)
 	router.POST("/trades/sell", createOrder)
-	router.PUT("/trades/buy", purchaseOrder)
-
 	router.GET("/trades/open", getOpenOrder)
+	router.PUT("/trades/buy", purchaseOrder)
 
 	router.Run(configuration.Server.URL())
 }
