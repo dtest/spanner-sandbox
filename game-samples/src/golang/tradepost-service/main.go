@@ -20,9 +20,9 @@ import (
 	"net/http"
 
 	spanner "cloud.google.com/go/spanner"
-	"github.com/dtest/spanner-game-tradepost-service/config"
-	"github.com/dtest/spanner-game-tradepost-service/models"
 	"github.com/gin-gonic/gin"
+	"github.com/googlecloudplatform/cloud-spanner-samples/gaming-tradepost-service/config"
+	"github.com/googlecloudplatform/cloud-spanner-samples/gaming-tradepost-service/models"
 )
 
 // Mutator to create spanner context and client, and set them in gin

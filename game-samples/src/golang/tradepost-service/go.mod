@@ -1,4 +1,4 @@
-module github.com/dtest/spanner-game-tradepost-service
+module github.com/googlecloudplatform/cloud-spanner-samples/gaming-tradepost-service
 
 go 1.18
 

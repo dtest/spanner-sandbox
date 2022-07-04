@@ -26,7 +26,7 @@ import (
 	instance "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"embed"
 	"fmt"
-	"github.com/dtest/spanner-game-profile-service/models"
+	"github.com/googlecloudplatform/cloud-spanner-samples/gaming-profile-service/models"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	databasepb "google.golang.org/genproto/googleapis/spanner/admin/database/v1"

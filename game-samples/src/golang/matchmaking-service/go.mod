@@ -1,4 +1,4 @@
-module github.com/dtest/spanner-game-match-service
+module github.com/googlecloudplatform/cloud-spanner-samples/gaming-matchmaking-service
 
 go 1.18
 

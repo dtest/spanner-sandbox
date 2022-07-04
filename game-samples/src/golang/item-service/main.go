@@ -21,9 +21,9 @@ import (
 	"time"
 
 	spanner "cloud.google.com/go/spanner"
-	"github.com/dtest/spanner-game-item-service/config"
-	"github.com/dtest/spanner-game-item-service/models"
 	"github.com/gin-gonic/gin"
+	"github.com/googlecloudplatform/cloud-spanner-samples/gaming-item-service/config"
+	"github.com/googlecloudplatform/cloud-spanner-samples/gaming-item-service/models"
 )
 
 // Mutator to create spanner context and client, and set them in gin
